@@ -9,6 +9,8 @@ from ._trainer import Trainer
 from .._losses import SpectralNetLoss
 from .._models import SpectralNetModel
 
+#
+import numpy as np
 
 class SpectralTrainer:
     def __init__(self, config: dict, device: torch.device, is_sparse: bool = False):
@@ -93,6 +95,10 @@ class SpectralTrainer:
 
         train_loader, ortho_loader, valid_loader = self._get_data_loader()
 
+        current_lr_list=list()
+        train_loss_list=list()
+        validation_loss_list=list()    
+        
         print("Training SpectralNet:")
         t = trange(self.epochs, leave=True)
         for epoch in t:
@@ -142,8 +148,13 @@ class SpectralTrainer:
                 )
             )
             t.refresh()
-
-        return self.spectral_net
+            current_lr_list.append(current_lr)
+            train_loss_list.append(train_loss)
+            validation_loss_list.append(valid_loss)
+            
+        logs = np.concatenate([np.arange(epochs), np.array(train_loss_list), np.array(validation_loss_list), np.array(current_lr_list)])
+        
+        return self.spectral_net, logs
 
     def validate(self, valid_loader: DataLoader) -> float:
         valid_loss = 0.0
