@@ -152,7 +152,7 @@ class SpectralTrainer:
             train_loss_list.append(train_loss)
             validation_loss_list.append(valid_loss)
             
-        logs = np.concatenate([np.arange(epoch), np.array(train_loss_list), np.array(validation_loss_list), np.array(current_lr_list)])
+        logs = np.stack([np.arange(len(train_loss_list)), np.array(train_loss_list), np.array(validation_loss_list), np.array(current_lr_list)])
         
         return self.spectral_net, logs
 
