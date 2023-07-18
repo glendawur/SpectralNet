@@ -228,7 +228,7 @@ class SpectralNet:
         self.spectral_trainer = SpectralTrainer(
             config=spectral_config, device=self.device, is_sparse=is_sparse
         )
-        self.spec_net = self.spectral_trainer.train(X, y, self.siamese_net)
+        self.spec_net, self.logs = self.spectral_trainer.train(X, y, self.siamese_net)
 
     def predict(self, X: torch.Tensor) -> np.ndarray:
         """Predicts the cluster assignments for the given data.
