@@ -106,7 +106,7 @@ class SpectralTrainer:
         for epoch in t:
             train_loss = 0.0
             ortho_loss = 0.0
-            for batch_id, ((X_grad, _), (X_orth, _)) in enumerate(train_loader, ortho_loader):
+            for batch_id, ((X_grad, _), (X_orth, _)) in enumerate(zip(train_loader, ortho_loader)):
                 X_grad = X_grad.to(device=self.device)
                 X_grad = X_grad.view(X_grad.size(0), -1)
                 X_orth = X_orth.to(device=self.device)
