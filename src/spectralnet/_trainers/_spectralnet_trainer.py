@@ -97,18 +97,22 @@ class SpectralTrainer:
 
         current_lr_list=list()
         train_loss_list=list()
+        train_ortho_list=list()
         validation_loss_list=list()    
+        covariances = list()
         
         print("Training SpectralNet:")
         t = trange(self.epochs, leave=True)
         for epoch in t:
             train_loss = 0.0
-            for (X_grad, _), (X_orth, _) in zip(train_loader, ortho_loader):
+            ortho_loss = 0.0
+            for batch_id, ((X_grad, _), (X_orth, _)) in enumerate(train_loader, ortho_loader):
                 X_grad = X_grad.to(device=self.device)
                 X_grad = X_grad.view(X_grad.size(0), -1)
                 X_orth = X_orth.to(device=self.device)
                 X_orth = X_orth.view(X_orth.size(0), -1)
 
+                
                 if self.is_sparse:
                     X_grad = make_batch_for_sparse_grapsh(X_grad)
                     X_orth = make_batch_for_sparse_grapsh(X_orth)
@@ -132,9 +136,13 @@ class SpectralTrainer:
                 loss.backward()
                 self.optimizer.step()
                 train_loss += loss.item()
+                ortho_loss += torch.norm(torch.mm(Y.T, Y) - torch.eye(Y.shape[1], device = self.device), p='fro').item()
 
+                if batch_id == 0:
+                    covariances.append(torch.mm(Y.T, Y).cpu().detach())
+                
             train_loss /= len(train_loader)
-
+            ortho_loss /= len(train_loader)
             # Validation step
             valid_loss = self.validate(valid_loader)
             self.scheduler.step(valid_loss)
@@ -150,11 +158,17 @@ class SpectralTrainer:
             t.refresh()
             current_lr_list.append(current_lr)
             train_loss_list.append(train_loss)
+            train_ortho_list.append(ortho_loss)
+            ####
             validation_loss_list.append(valid_loss)
             
-        logs = np.stack([np.arange(len(train_loss_list)), np.array(train_loss_list), np.array(validation_loss_list), np.array(current_lr_list)])
+            
+        logs = np.stack([np.arange(len(train_loss_list)), 
+                         np.array(train_loss_list), np.array(train_ortho_list), 
+                         np.array(validation_loss_list), 
+                         np.array(current_lr_list)])
         
-        return self.spectral_net, logs
+        return self.spectral_net, logs, covariances
 
     def validate(self, valid_loader: DataLoader) -> float:
         valid_loss = 0.0
