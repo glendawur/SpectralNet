@@ -136,7 +136,7 @@ class SpectralTrainer:
                 loss.backward()
                 self.optimizer.step()
                 train_loss += loss.item()
-                ortho_loss += torch.norm(torch.mm(Y.T, Y) - torch.eye(Y.shape[1], device = self.device), p='fro').item()
+                ortho_loss += torch.norm(torch.mm(Y.T, Y) - Y.shape[0]*torch.eye(Y.shape[1], device = self.device), p='fro').item()
 
                 if batch_id == 0:
                     covariances.append(torch.mm(Y.T, Y).cpu().detach())
