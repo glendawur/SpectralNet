@@ -100,6 +100,7 @@ class SpectralTrainer:
         train_ortho_list=list()
         validation_loss_list=list()    
         covariances = list()
+        ortho_weights = list()
         
         print("Training SpectralNet:")
         t = trange(self.epochs, leave=True)
@@ -140,6 +141,7 @@ class SpectralTrainer:
 
                 if batch_id == 0:
                     covariances.append(torch.mm(Y.T, Y).cpu().detach())
+                    ortho_weights.append(self.spectral_net.orthonorm_weights.cpu().detach())
                 
             train_loss /= len(train_loader)
             ortho_loss /= len(train_loader)
@@ -168,7 +170,7 @@ class SpectralTrainer:
                          np.array(validation_loss_list), 
                          np.array(current_lr_list)])
         
-        return self.spectral_net, logs, covariances
+        return self.spectral_net, logs, covariances, ortho_weights
 
     def validate(self, valid_loader: DataLoader) -> float:
         valid_loss = 0.0
